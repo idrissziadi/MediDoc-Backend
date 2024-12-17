@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     'accounts',
+    'rest_framework',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -76,10 +79,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'medidoc_db',  # Remplace par le nom de ta base
+        'USER': 'root',      # Nom d'utilisateur MySQL
+        'PASSWORD': 'admin',       # Mot de passe MySQL
+        'HOST': '127.0.0.1',                  # Adresse de l'hôte (localhost)
+        'PORT': '3306',                       # Port MySQL par défaut
     }
 }
+
 
 
 # Password validation
@@ -122,3 +130,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Permission par défaut pour toutes les vues
+    ],
+}
+
+AUTH_USER_MODEL = 'accounts.User'
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=3652),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=3652),  
+
+}
