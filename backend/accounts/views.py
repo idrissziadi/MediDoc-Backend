@@ -14,13 +14,21 @@ from .permissions import IsMedecin
 @permission_classes([AllowAny])  # Permet l'accès à tous les utilisateurs
 def signup(request):
     """
-    Vue pour inscrire un utilisateur
+    Vue pour inscrire un utilisateur.
+    Si le champ 'specialite' n'est pas fourni, le définir à 'other'.
     """
     if request.method == 'POST':
+        # Vérifier si 'specialite' est présent dans les données, sinon définir à 'other'
+        if 'specialite' not in request.data:
+            request.data['specialite'] = 'other'
+        
+        # Créer un serializer avec les données mises à jour
         serializer = UserSerializer(data=request.data)
+        
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
