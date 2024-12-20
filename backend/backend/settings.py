@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from os import path
+from decouple import config
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,10 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-@pl=vh-7qume6f24t5nyq*%w*mxui=v2)5!10n2xb45)w&gq50'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -75,18 +77,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'medidoc_db',  # Remplace par le nom de ta base
-        'USER': 'root',      # Nom d'utilisateur MySQL
-        'PASSWORD': 'admin',       # Mot de passe MySQL
-        'HOST': '127.0.0.1',                  # Adresse de l'hôte (localhost)
-        'PORT': '3306',                       # Port MySQL par défaut
+        'NAME': config('DB_NAME'),  # Remplace par le nom de ta base
+        'USER': config('DB_USER'),      # Nom d'utilisateur MySQL
+        'PASSWORD': config('DB_PASSWORD'),       # Mot de passe MySQL
+        'HOST': config('DB_HOST'),                  # Adresse de l'hôte (localhost)
+        'PORT': config('DB_PORT'),                       # Port MySQL par défaut
+        'OPTIONS': {
+            'ssl': {
+                'ca': path.join(BASE_DIR, 'DigiCertGlobalRootCA.crt.pem') 
+            }
+        }
     }
 }
 
