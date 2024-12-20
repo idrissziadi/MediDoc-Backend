@@ -45,6 +45,9 @@ INSTALLED_APPS = [
     'accounts',
     'DPI',
     'soins',
+    'consultations',
+    'bilans',
+    'analysebiologique',
 ]
 
 MIDDLEWARE = [
