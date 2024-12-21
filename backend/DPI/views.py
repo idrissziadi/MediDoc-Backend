@@ -55,7 +55,7 @@ def rechercher_dpi_par_nss(request, nss):
         # Chercher le DPI en fonction du NSS
         dpi = DPI.objects.prefetch_related(
             'soins',
-            'consultations__ordonnances__ordonnancehasmedicament_set__medicament',
+            'consultations__ordonnances__ordonnance_has_medicaments__medicament',
             'consultations__bilans__analysebiologique_set'
         ).select_related('patient').get(nss=nss)
     except DPI.DoesNotExist:
@@ -77,7 +77,7 @@ def consulter_dpi_par_qr(request, qr_code):
         # Chercher le DPI en fonction du QR code (supposé être un NSS)
         dpi = DPI.objects.prefetch_related(
             'soins',
-            'consultations__ordonnances__ordonnancehasmedicament_set__medicament',
+            'consultations__ordonnances__ordonnance_has_medicaments__medicament',
             'consultations__bilans__analysebiologique_set'
         ).select_related('patient').get(nss=qr_code)
     except DPI.DoesNotExist:

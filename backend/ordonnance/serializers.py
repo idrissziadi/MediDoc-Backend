@@ -3,7 +3,7 @@ from .models import Ordonnance
 from ordonnace_has_medicament.serializers import OrdonnanceHasMedicamentDetailSerializer
 
 class OrdonnanceDetailSerializer(serializers.ModelSerializer):
-    medicaments = OrdonnanceHasMedicamentDetailSerializer(many=True, source='ordonnancehasmedicament_set')  # Inclut les médicaments
+    medicaments = OrdonnanceHasMedicamentDetailSerializer(many=True, source='ordonnance_has_medicaments')  # Inclut les médicaments
 
     class Meta:
         model = Ordonnance
