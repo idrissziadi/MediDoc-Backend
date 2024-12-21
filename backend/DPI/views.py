@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import DPI
 from .serializers import DPISerializer
+from .serializers import DPIDetailSerializer
 from .permissions import IsPatient , IsInfirmier , IsMedecin , IsMedecinOrInfirmier
 @api_view(['POST'])
 @permission_classes([IsMedecin])
@@ -47,35 +48,42 @@ def consulter_dpi(request):
 @permission_classes([IsMedecinOrInfirmier])
 def rechercher_dpi_par_nss(request, nss):
     """
-    Rechercher un DPI par NSS.
-    Accessible uniquement aux infirmiers et medecins.
+    Rechercher un DPI par NSS avec tous les détails.
+    Accessible uniquement aux infirmiers et médecins.
     """
     try:
-        # Chercher le DPI en fonction du NSS sans filtrer par utilisateur connecté
-        dpi = DPI.objects.get(nss=nss)
+        # Chercher le DPI en fonction du NSS
+        dpi = DPI.objects.prefetch_related(
+            'soins',
+            'consultations__ordonnances__ordonnancehasmedicament_set__medicament',
+            'consultations__bilans__analysebiologique_set'
+        ).select_related('patient').get(nss=nss)
     except DPI.DoesNotExist:
         return Response({'detail': 'DPI non trouvé avec ce NSS.'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Sérialiser et retourner les données du DPI
-    serializer = DPISerializer(dpi)
+    # Sérialiser et retourner les données détaillées du DPI
+    serializer = DPIDetailSerializer(dpi)
     return Response(serializer.data)
 
 
-""" à revoir"""
 @api_view(['GET'])
 @permission_classes([IsMedecinOrInfirmier])
 def consulter_dpi_par_qr(request, qr_code):
     """
     Consulter le DPI d'un patient via un QR Code (QR Code supposé contenir le NSS).
-    Accessible uniquement aux infirmiers et medecins.
+    Accessible uniquement aux infirmiers et médecins.
     """
     try:
         # Chercher le DPI en fonction du QR code (supposé être un NSS)
-        dpi = DPI.objects.get(nss=qr_code)
+        dpi = DPI.objects.prefetch_related(
+            'soins',
+            'consultations__ordonnances__ordonnancehasmedicament_set__medicament',
+            'consultations__bilans__analysebiologique_set'
+        ).select_related('patient').get(nss=qr_code)
     except DPI.DoesNotExist:
         return Response({'detail': 'DPI non trouvé avec ce QR code.'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Sérialiser et retourner les données du DPI
-    serializer = DPISerializer(dpi)
+    # Sérialiser et retourner les données détaillées du DPI
+    serializer = DPIDetailSerializer(dpi)
     return Response(serializer.data)
 

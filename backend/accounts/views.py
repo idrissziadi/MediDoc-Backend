@@ -37,7 +37,8 @@ def signup(request):
 @permission_classes([AllowAny])  # Permet l'accès à tous les utilisateurs
 def login(request):
     """
-    Vue pour connecter un utilisateur
+    Vue pour connecter un utilisateur.
+    Retourne les tokens JWT et les informations de l'utilisateur.
     """
     if request.method == 'POST':
         email = request.data.get('email')
@@ -46,10 +47,16 @@ def login(request):
         user = authenticate(request, username=email, password=password)
         if user is not None:
             refresh = RefreshToken.for_user(user)
+
+            # Sérialisation des données utilisateur
+            user_data = UserSerializer(user).data
+
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'user': user_data,  # Informations sur l'utilisateur
             })
+
         return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
 
 

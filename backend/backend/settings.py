@@ -48,6 +48,9 @@ INSTALLED_APPS = [
     'consultations',
     'bilans',
     'analysebiologique',
+    'ordonnance',
+    'medicaments',
+    'ordonnace_has_medicament',
 ]
 
 MIDDLEWARE = [

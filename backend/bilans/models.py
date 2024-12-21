@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from DPI.models import DPI
-from consultations.models import Consultation       
+from consultations.models import Consultation      
 
 class Bilan(models.Model):
     """
