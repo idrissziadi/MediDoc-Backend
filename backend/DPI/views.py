@@ -24,7 +24,6 @@ def creer_dpi(request):
         # Si les données ne sont pas valides, on renvoie les erreurs
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['GET'])
 @permission_classes([IsPatient])
 def consulter_dpi(request):
@@ -34,14 +33,19 @@ def consulter_dpi(request):
     """
     try:
         # Récupérer le DPI pour l'utilisateur connecté en utilisant son ID via le token (request.user.id)
-        dpi = DPI.objects.get(patient_id=request.user.id)
+        dpi = DPI.objects.prefetch_related(
+            'soins',
+            'consultations__ordonnances__ordonnance_has_medicaments__medicament',
+            'consultations__bilans__analysebiologique_set'
+        ).select_related('patient').get(patient_id=request.user.id)
     except DPI.DoesNotExist:
         # Si aucun DPI n'est trouvé pour l'utilisateur, retourner une erreur
         return Response({'detail': 'DPI non trouvé pour cet utilisateur.'}, status=status.HTTP_404_NOT_FOUND)
 
-    # Sérialisation et renvoi des données du DPI
-    serializer = DPISerializer(dpi)
+    # Sérialisation et renvoi des données détaillées du DPI
+    serializer = DPIDetailSerializer(dpi)
     return Response(serializer.data)
+
 
 
 @api_view(['GET'])
@@ -87,3 +91,43 @@ def consulter_dpi_par_qr(request, qr_code):
     serializer = DPIDetailSerializer(dpi)
     return Response(serializer.data)
 
+
+
+@api_view(['PATCH'])
+@permission_classes([IsMedecin])
+def modifier_dpi(request, dpi_id):
+    """
+    Modifier un DPI existant avec l'ID spécifié. 
+    Cette vue est accessible uniquement aux médecins.
+    """
+    try:
+        # Récupérer l'objet DPI en fonction de l'ID
+        dpi = DPI.objects.get(nss=dpi_id)
+    except DPI.DoesNotExist:
+        return Response({'detail': 'DPI non trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Sérialiser et mettre à jour les données du DPI
+    serializer = DPISerializer(dpi, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsMedecin])
+def supprimer_dpi(request, dpi_id):
+    """
+    Supprimer un DPI existant avec l'ID spécifié. 
+    Cette vue est accessible uniquement aux médecins.
+    """
+    try:
+        # Récupérer l'objet DPI en fonction de l'ID
+        dpi = DPI.objects.get(nss=dpi_id)
+    except DPI.DoesNotExist:
+        return Response({'detail': 'DPI non trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Supprimer le DPI
+    dpi.delete()
+    return Response({'detail': 'DPI supprimé avec succès.'}, status=status.HTTP_204_NO_CONTENT)
