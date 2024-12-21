@@ -60,6 +60,7 @@ def login(request):
         return Response({'error': 'Invalid email or password'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
+
 @api_view(['GET'])
 @permission_classes([IsMedecin])  # Permet l'accès seulement aux médecins
 def get_user(request, user_id):

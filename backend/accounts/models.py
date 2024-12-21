@@ -54,6 +54,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('radiologue', 'Radiologue'),
         ('laborantin', 'Laborantin'),
         ('infirmier', 'Infirmier'),
+        ('administratif', 'Administratif'),
     ]
     role = models.CharField(max_length=15, choices=ROLE_CHOICES)
 
