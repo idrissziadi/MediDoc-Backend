@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from .models import DPI
 from .serializers import DPISerializer
 from .permissions import IsPatient , IsInfirmier , IsMedecin , IsMedecinOrInfirmier
+
+
 @api_view(['POST'])
 @permission_classes([IsMedecin])
 def creer_dpi(request):

@@ -5,10 +5,19 @@ class IsMedecin(permissions.BasePermission):
     Permission personnalisée qui permet d'autoriser uniquement les médecins.
     """
     def has_permission(self, request, view):
-        print("User:", request.user)
-        print("Role:", request.user.role)
-        # Vérifie si l'utilisateur est authentifié et si son rôle est "doctor"
-        return request.user and request.user.role == 'medecin'
+        # Si l'utilisateur n'est pas authentifié
+        if not request.user.is_authenticated:
+            # Vous pouvez autoriser ou refuser les utilisateurs anonymes ici
+            return False  # Bloque l'accès aux utilisateurs non authentifiés
+
+        # Si l'utilisateur est authentifié, vérifiez son rôle
+        role = getattr(request.user, 'role', None)  # Retourne None si 'role' n'existe pas
+
+        # Définissez la logique pour vérifier les rôles
+        if role == 'medecin':
+            return True  # Accès autorisé pour les médecins
+
+        return False
 
 
 class IsPatient(permissions.BasePermission):

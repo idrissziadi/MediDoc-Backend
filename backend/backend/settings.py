@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts',
     'DPI',
     'soins',
+    'bilans',
     'corsheaders',
 ]
 
