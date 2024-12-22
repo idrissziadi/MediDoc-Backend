@@ -16,9 +16,12 @@ from accounts.serializers import UserSerializer
 @permission_classes([IsAdministratif])
 def creer_dpi(request):
     
-    if request.method == 'POST':
+    
         data = request.data.copy()   
         User = get_user_model()
+        nss = data.get("nss")
+        if DPI.objects.filter(nss=nss).exists():
+         return Response({"detail": f"Le numéro de sécurité sociale '{nss}' existe déjà."},status=status.HTTP_400_BAD_REQUEST)
 
         # Étape 1 : Créer le patient dans la table User
         patient_data = {
