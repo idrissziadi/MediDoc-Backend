@@ -42,8 +42,6 @@ class IsPatient(permissions.BasePermission):
     Permission personnalisée qui permet d'autoriser uniquement les patients.
     """
     def has_permission(self, request, view):
-        print("User:", request.user)
-        print("Role:", request.user.role)
         # Vérifie si l'utilisateur est authentifié et si son rôle est "patient"
         return request.user and request.user.role == 'patient'
 

@@ -10,7 +10,7 @@ class AnalyseBiologique(models.Model):
     parametre_analyse = models.CharField(max_length=100,null=True)
     valeur = models.FloatField(null=True)
     unite = models.CharField(max_length=10,null=True)
-    laborantin = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, limit_choices_to={'role': 'laborantin'},null=True)
+    laborantin = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, limit_choices_to={'role': 'laborantin'},null=True,related_name='analyses_biologiques')
 
     consultation = models.ForeignKey(
         Consultation, 
@@ -28,7 +28,7 @@ class ImageRadiologique(models.Model):
     type = models.CharField(max_length=45,null=True)
     url = models.URLField(max_length=1000,null=True)
     compte_rendu = models.TextField(null=True)
-    radiologue = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, limit_choices_to={'role': 'radiologue'},null=True)
+    radiologue = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, limit_choices_to={'role': 'radiologue'},null=True,related_name='images_radiologiques')
 
     consultation = models.ForeignKey(
         Consultation, 

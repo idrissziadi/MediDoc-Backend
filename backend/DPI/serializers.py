@@ -13,4 +13,4 @@ class DPIDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DPI
-        fields = ['nss', 'nom', 'date_naissance', 'telephone', 'adresse', 'mutuelle', 'personne_contact', 'sexe', 'patient', 'soins', 'consultations']
+        fields = ['nss', 'date_naissance', 'telephone', 'adresse', 'mutuelle', 'personne_contact', 'sexe', 'soins', 'consultations']

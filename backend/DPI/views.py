@@ -10,8 +10,6 @@ from django.contrib.auth import get_user_model
 from accounts.serializers import UserSerializer
 
 
-
-
 @api_view(['POST'])
 @permission_classes([IsAdministratif])
 def creer_dpi(request):
@@ -58,8 +56,9 @@ def creer_dpi(request):
             return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET'])
-@permission_classes([IsPatient])
+@permission_classes([IsAuthenticated])
 def consulter_dpi(request):
     """
     Consulter le DPI de l'utilisateur connecté via le token d'authentification.
@@ -70,7 +69,8 @@ def consulter_dpi(request):
         dpi = DPI.objects.prefetch_related(
             'soins',
             'consultations__ordonnances__ordonnance_has_medicaments__medicament',
-            'consultations__bilans__analysebiologique_set'
+            'consultations__analyses_biologiques',   
+            'consultations__images_radiologiques'   
         ).select_related('patient').get(patient_id=request.user.id)
     except DPI.DoesNotExist:
         # Si aucun DPI n'est trouvé pour l'utilisateur, retourner une erreur
@@ -94,7 +94,8 @@ def rechercher_dpi_par_nss(request, nss):
         dpi = DPI.objects.prefetch_related(
             'soins',
             'consultations__ordonnances__ordonnance_has_medicaments__medicament',
-            'consultations__bilans__analysebiologique_set'
+            'consultations__analyses_biologiques',   
+            'consultations__images_radiologiques'
         ).select_related('patient').get(nss=nss)
     except DPI.DoesNotExist:
         return Response({'detail': 'DPI non trouvé avec ce NSS.'}, status=status.HTTP_404_NOT_FOUND)
@@ -116,7 +117,8 @@ def consulter_dpi_par_qr(request, qr_code):
         dpi = DPI.objects.prefetch_related(
             'soins',
             'consultations__ordonnances__ordonnance_has_medicaments__medicament',
-            'consultations__bilans__analysebiologique_set'
+            'consultations__analyses_biologiques',   
+            'consultations__images_radiologiques'
         ).select_related('patient').get(nss=qr_code)
     except DPI.DoesNotExist:
         return Response({'detail': 'DPI non trouvé avec ce QR code.'}, status=status.HTTP_404_NOT_FOUND)
