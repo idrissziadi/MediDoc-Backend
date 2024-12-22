@@ -15,13 +15,22 @@ from accounts.serializers import UserSerializer
 @api_view(['POST'])
 @permission_classes([IsAdministratif])
 def creer_dpi(request):
-    
-    
+            
         data = request.data.copy()   
         User = get_user_model()
         nss = data.get("nss")
         if DPI.objects.filter(nss=nss).exists():
          return Response({"detail": f"Le numéro de sécurité sociale '{nss}' existe déjà."},status=status.HTTP_400_BAD_REQUEST)
+                
+        medecin_nom = data.get("medecin_traitant")
+        if medecin_nom:
+            medecin = User.objects.filter(role="medecin", nom=medecin_nom).first()
+            if not medecin:
+                return Response(
+                    {"detail": f"Le médecin '{medecin_nom}' n'existe pas ou n'est pas valide."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            data["medecin_traitant"] = medecin.id
 
         # Étape 1 : Créer le patient dans la table User
         patient_data = {
@@ -42,25 +51,11 @@ def creer_dpi(request):
                 {"detail": "Erreur lors de la création du patient.", "errors": patient_serializer.errors},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Étape 2 : Rechercher le médecin par son nom
-        medecin_nom = data.get("medecin_traitant")
-        if medecin_nom:
-            medecin = User.objects.filter(role="medecin", nom=medecin_nom).first()
-            if not medecin:
-                return Response(
-                    {"detail": f"Le médecin '{medecin_nom}' n'existe pas ou n'est pas valide."},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-            # Ajouter l'ID du médecin dans les données à sauvegarder
-            data["medecin_traitant"] = medecin.id
-
-        # Étape 3 : Créer le DPI
+        # Étape 2 : Créer le DPI
         serializer = DPISerializer(data=data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
+            return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])

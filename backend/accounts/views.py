@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
 from .models import User
 from rest_framework.permissions import AllowAny
-from .permissions import IsMedecin
+from .permissions import IsMedecin, IsAdministratif
 
 
 @api_view(['POST'])
@@ -73,3 +73,11 @@ def get_user(request, user_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except User.DoesNotExist:
         return Response({'error': 'Utilisateur non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAdministratif])   
+def get_medecins(request):
+    
+    medecins = User.objects.filter(role='medecin').values('id', 'nom', 'specialite')
+    return Response(medecins, status=200)
