@@ -18,6 +18,23 @@ class IsMedecin(permissions.BasePermission):
             return True  # Accès autorisé pour les médecins
 
         return False
+    
+class IsAdministratif(permissions.BasePermission):
+     
+    def has_permission(self, request, view):
+        # Si l'utilisateur n'est pas authentifié
+        if not request.user.is_authenticated:
+            # Vous pouvez autoriser ou refuser les utilisateurs anonymes ici
+            return False  # Bloque l'accès aux utilisateurs non authentifiés
+
+        # Si l'utilisateur est authentifié, vérifiez son rôle
+        role = getattr(request.user, 'role', None)  # Retourne None si 'role' n'existe pas
+
+        # Définissez la logique pour vérifier les rôles
+        if role == 'administratif':
+            return True  # Accès autorisé pour les médecins
+
+        return False    
 
 
 class IsPatient(permissions.BasePermission):

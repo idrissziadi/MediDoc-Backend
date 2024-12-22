@@ -44,8 +44,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'DPI',
-    'soins',
+    'soins', 
     'bilans',
+    'consultations',
+    'ordonnance',
+    'medicaments',
+    'ordonnace_has_medicament', 
     'corsheaders',
 ]
 
