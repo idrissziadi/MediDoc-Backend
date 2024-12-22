@@ -6,5 +6,4 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('user/<int:user_id>/', views.get_user, name='get_user'),  # URL pour rechercher un utilisateur
     path('medecins/', views.get_medecins, name='get_medecins'),
-
 ]

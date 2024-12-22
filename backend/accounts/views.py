@@ -80,4 +80,4 @@ def get_user(request, user_id):
 def get_medecins(request):
     
     medecins = User.objects.filter(role='medecin').values('id', 'nom', 'specialite')
-    return Response(medecins, status=200)
+    return Response(medecins, status=status.HTTP_200_OK)
