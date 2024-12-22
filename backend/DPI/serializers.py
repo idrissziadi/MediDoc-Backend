@@ -5,7 +5,7 @@ from consultations.serializers import ConsultationDetailSerializer
 class DPISerializer(serializers.ModelSerializer):
     class Meta:
         model = DPI
-        fields = ['nss', 'nom', 'date_naissance', 'telephone', 'adresse', 'mutuelle', 'personne_contact', 'sexe', 'patient','medecin_traitant']
+        fields = ['nss', 'date_naissance', 'telephone', 'adresse', 'mutuelle', 'personne_contact', 'sexe', 'patient','medecin_traitant']
 
 class DPIDetailSerializer(serializers.ModelSerializer):
     soins = SoinDetailSerializer(many=True)

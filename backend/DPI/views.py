@@ -7,6 +7,7 @@ from .serializers import DPISerializer
 from .serializers import DPIDetailSerializer
 from .permissions import IsPatient , IsInfirmier , IsMedecin , IsMedecinOrInfirmier, IsAdministratif
 from django.contrib.auth import get_user_model
+from accounts.serializers import UserSerializer
 
 
 
@@ -14,27 +15,44 @@ from django.contrib.auth import get_user_model
 @api_view(['POST'])
 @permission_classes([IsAdministratif])
 def creer_dpi(request):
-    """
-    Crée un nouveau DPI pour un patient. Le champ `patient_id` et le champ `medecin` (nom du médecin) doivent être inclus dans la requête.
-    """
+    
     if request.method == 'POST':
-        data = request.data.copy()  # Copie des données pour les manipulations
+        data = request.data.copy()   
+        User = get_user_model()
 
-        User = get_user_model()    
+        # Étape 1 : Créer le patient dans la table User
+        patient_data = {
+            "nom": data.get("patient_nom"),
+            "email": data.get("patient_email"),
+            "role": "patient",  
+            "password": data.get("patient_password"),
+            "specialite": "other",
+        }
 
-        # Rechercher le médecin par son nom
-        medecin_nom = data.get('medecin_traitant')
+        # Sérialiser les données du patient
+        patient_serializer = UserSerializer(data=patient_data)
+        if patient_serializer.is_valid():
+            patient = patient_serializer.save()  # Crée le patient et récupère l'instance
+            data["patient"] = patient.id  # Ajouter l'ID du patient aux données du DPI
+        else:
+            return Response(
+                {"detail": "Erreur lors de la création du patient.", "errors": patient_serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Étape 2 : Rechercher le médecin par son nom
+        medecin_nom = data.get("medecin_traitant")
         if medecin_nom:
-            medecin = User.objects.filter(role='medecin', nom=medecin_nom).first()
+            medecin = User.objects.filter(role="medecin", nom=medecin_nom).first()
             if not medecin:
                 return Response(
                     {"detail": f"Le médecin '{medecin_nom}' n'existe pas ou n'est pas valide."},
-                    status=status.HTTP_404_NOT_FOUND
+                    status=status.HTTP_404_NOT_FOUND,
                 )
             # Ajouter l'ID du médecin dans les données à sauvegarder
-            data['medecin_traitant'] = medecin.id
+            data["medecin_traitant"] = medecin.id
 
-        # Sérialiser les données avec le médecin traitant inclus
+        # Étape 3 : Créer le DPI
         serializer = DPISerializer(data=data)
         if serializer.is_valid():
             serializer.save()

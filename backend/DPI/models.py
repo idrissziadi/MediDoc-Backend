@@ -9,7 +9,6 @@ class DPI(models.Model):
 
     # Champs du modèle DPI
     nss = models.BigIntegerField(primary_key=True)
-    nom = models.CharField(max_length=255)
     date_naissance = models.DateField()
     telephone = models.CharField(max_length=15)
     adresse = models.CharField(max_length=255)
