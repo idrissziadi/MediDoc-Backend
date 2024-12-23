@@ -21,5 +21,5 @@ class DPI(models.Model):
     medecin_traitant = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, limit_choices_to={'role': 'medecin'},related_name='dpi_as_medecin_traitant',null=True, blank=True)
 
     def __str__(self):
-        return f"DPI {self.nss} - {self.nom}"
+        return f"DPI {self.nss}"
 

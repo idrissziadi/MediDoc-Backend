@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import DPI
 from .serializers import DPISerializer
 from .serializers import DPIDetailSerializer
-from .permissions import IsPatient , IsInfirmier , IsMedecin , IsMedecinOrInfirmier, IsAdministratif
+from .permissions import IsMedecin , IsMedecinOrInfirmier, IsAdministratif, IsPatientOrMedecin
 from django.contrib.auth import get_user_model
 from accounts.serializers import UserSerializer
 
@@ -58,12 +58,8 @@ def creer_dpi(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsPatient])
-def consulter_dpi(request):
-    """
-    Consulter le DPI de l'utilisateur connecté via le token d'authentification.
-    Le token d'authentification permet d'identifier l'utilisateur connecté et de récupérer son DPI.
-    """
+@permission_classes([IsPatientOrMedecin])
+def consulter_dpi(request, nss):
     try:
         # Récupérer le DPI pour l'utilisateur connecté en utilisant son ID via le token (request.user.id)
         dpi = DPI.objects.prefetch_related(
@@ -71,62 +67,29 @@ def consulter_dpi(request):
             'consultations__ordonnances__ordonnance_has_medicaments__medicament',
             'consultations__analyses_biologiques',   
             'consultations__images_radiologiques'   
-        ).select_related('patient').get(patient_id=request.user.id)
+        ).select_related('patient').get(nss=nss)
     except DPI.DoesNotExist:
         # Si aucun DPI n'est trouvé pour l'utilisateur, retourner une erreur
         return Response({'detail': 'DPI non trouvé pour cet utilisateur.'}, status=status.HTTP_404_NOT_FOUND)
-
     # Sérialisation et renvoi des données détaillées du DPI
     serializer = DPIDetailSerializer(dpi)
-    return Response(serializer.data)
+    nom = dpi.patient.nom
+    response_data = serializer.data
+    response_data['nom'] = nom
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 
 @api_view(['GET'])
 @permission_classes([IsMedecinOrInfirmier])
 def rechercher_dpi_par_nss(request, nss):
-    """
-    Rechercher un DPI par NSS avec tous les détails.
-    Accessible uniquement aux infirmiers et médecins.
-    """
     try:
-        # Chercher le DPI en fonction du NSS
-        dpi = DPI.objects.prefetch_related(
-            'soins',
-            'consultations__ordonnances__ordonnance_has_medicaments__medicament',
-            'consultations__analyses_biologiques',   
-            'consultations__images_radiologiques'
-        ).select_related('patient').get(nss=nss)
+        dpi = DPI.objects.select_related('patient').get(nss=nss)
     except DPI.DoesNotExist:
         return Response({'detail': 'DPI non trouvé avec ce NSS.'}, status=status.HTTP_404_NOT_FOUND)
-
-    # Sérialiser et retourner les données détaillées du DPI
-    serializer = DPIDetailSerializer(dpi)
-    return Response(serializer.data)
-
-
-@api_view(['GET'])
-@permission_classes([IsMedecinOrInfirmier])
-def consulter_dpi_par_qr(request, qr_code):
-    """
-    Consulter le DPI d'un patient via un QR Code (QR Code supposé contenir le NSS).
-    Accessible uniquement aux infirmiers et médecins.
-    """
-    try:
-        # Chercher le DPI en fonction du QR code (supposé être un NSS)
-        dpi = DPI.objects.prefetch_related(
-            'soins',
-            'consultations__ordonnances__ordonnance_has_medicaments__medicament',
-            'consultations__analyses_biologiques',   
-            'consultations__images_radiologiques'
-        ).select_related('patient').get(nss=qr_code)
-    except DPI.DoesNotExist:
-        return Response({'detail': 'DPI non trouvé avec ce QR code.'}, status=status.HTTP_404_NOT_FOUND)
-
-    # Sérialiser et retourner les données détaillées du DPI
-    serializer = DPIDetailSerializer(dpi)
-    return Response(serializer.data)
-
+    
+    patient_nom = dpi.patient.nom   
+    return Response({'nom': patient_nom}, status=status.HTTP_200_OK)
 
 
 @api_view(['PATCH'])

@@ -17,4 +17,4 @@ class SoinDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Soin
-        fields = ['id_soin', 'date', 'soins', 'observations', 'dpi', 'infirmier']
+        fields = ['id_soin', 'date', 'soins', 'observations', 'infirmier']
