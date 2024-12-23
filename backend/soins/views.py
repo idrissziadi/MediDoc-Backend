@@ -5,6 +5,7 @@ from .models import Soin
 from DPI.models import DPI
 from .serializers import SoinSerializer
 from .permissions import IsInfirmier
+from datetime import datetime
 
 
 
@@ -37,7 +38,7 @@ def ajouterSoins(request):
         # Ajouter l'infirmier connecté dans les données de la requête
         data = request.data.copy()
         data['infirmier'] = request.user.id  # Utilisateur connecté de type infirmier
-
+        data['date'] = datetime.now().strftime('%Y-%m-%d')
         # Valider que le DPI existe
         dpi_id = data.get('dpi', None)
         if not DPI.objects.filter(nss=dpi_id).exists():

@@ -58,7 +58,7 @@ def creer_dpi(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsPatient])
 def consulter_dpi(request):
     """
     Consulter le DPI de l'utilisateur connecté via le token d'authentification.

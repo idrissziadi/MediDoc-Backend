@@ -6,4 +6,4 @@ class IsInfirmier(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         # L'utilisateur doit être authentifié et avoir un rôle 'infirmier'
-        return request.user and request.user.is_authenticated and request.user.role == 'infirmier'
+        return request.user.is_authenticated and request.user.role == 'infirmier'
