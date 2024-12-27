@@ -5,13 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from .models import DPI
 from .serializers import DPISerializer
 from .serializers import DPIDetailSerializer
-from .permissions import IsMedecin , IsMedecinOrInfirmier, IsAdministratif, IsPatientOrMedecin
+from .permissions import IsMedecin , IsMedecinOrInfirmier, IsPatientOrMedecin, IsAdministratifOrMedecin
 from django.contrib.auth import get_user_model
 from accounts.serializers import UserSerializer
 
 
 @api_view(['POST'])
-@permission_classes([IsAdministratif])
+@permission_classes([IsAdministratifOrMedecin])
 def creer_dpi(request):
             
         data = request.data.copy()   
@@ -62,21 +62,13 @@ def creer_dpi(request):
 def consulter_dpi(request, nss):
     try:
         # Récupérer le DPI pour l'utilisateur connecté en utilisant son ID via le token (request.user.id)
-        dpi = DPI.objects.prefetch_related(
-            'soins',
-            'consultations__ordonnances__ordonnance_has_medicaments__medicament',
-            'consultations__analyses_biologiques',   
-            'consultations__images_radiologiques'   
-        ).select_related('patient').get(nss=nss)
+        dpi = DPI.objects.all().get(nss=nss)
     except DPI.DoesNotExist:
         # Si aucun DPI n'est trouvé pour l'utilisateur, retourner une erreur
         return Response({'detail': 'DPI non trouvé pour cet utilisateur.'}, status=status.HTTP_404_NOT_FOUND)
     # Sérialisation et renvoi des données détaillées du DPI
     serializer = DPIDetailSerializer(dpi)
-    nom = dpi.patient.nom
-    response_data = serializer.data
-    response_data['nom'] = nom
-    return Response(response_data, status=status.HTTP_200_OK)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 

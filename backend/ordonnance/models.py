@@ -15,10 +15,10 @@ class Ordonnance(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='non_valide')
 
     # Relation avec Consultation (une consultation peut avoir plusieurs ordonnances)
-    consultation = models.ForeignKey(
+    consultation = models.OneToOneField(
         Consultation,
         on_delete=models.CASCADE,
-        related_name='ordonnances'
+        related_name='ordonnance'
     )
 
     def __str__(self):

@@ -10,6 +10,7 @@ from ordonnace_has_medicament.models import OrdonnanceHasMedicament
 from medicaments.models import Medicament
 from .serializers import ConsultationSerializer
 from .permissions import IsMedecin
+from datetime import datetime
 
 @api_view(['GET'])
 @permission_classes([IsMedecin])
@@ -94,18 +95,15 @@ def delete_consultation(request, id_consultation):
 
 @api_view(['POST'])
 @permission_classes([IsMedecin])
-def creerConsultationAvecOrdonnace(request):
-    """
-    Créer une consultation avec ses entités associées (ordonnances, bilans, etc.).
-    Accessible uniquement aux médecins.
-    """
+def creerConsultationAvecOrdonnance(request):
+    
     medecin_id = request.user.id  # Récupérer l'ID du médecin à partir du token
     data = request.data.copy()
 
     try:
         # 1. Créer la consultation
         consultation_data = {
-            "date": data.get("date"),
+            "date": datetime.now().strftime('%Y-%m-%d'),
             "resume": data.get("resume"),
             "dpi": data.get("dpi"),
             "medecin": medecin_id
@@ -116,31 +114,30 @@ def creerConsultationAvecOrdonnace(request):
 
         consultation = consultation_serializer.save()
 
-        # 2. Créer les ordonnances associées
-        ordonnances_data = data.get("ordonnances", [])
-        for ordonnance_data in ordonnances_data:
-            ordonnance = Ordonnance.objects.create(
-                consultation=consultation,
-                status=ordonnance_data.get("status", "non_valide")
-            )
+        # 2. Créer l'ordonnance (une seule ordonnance ici)
+        ordonnance_data = data.get("ordonnance", {})  # Notez qu'il s'agit désormais d'un dictionnaire, pas d'une liste
+        ordonnance = Ordonnance.objects.create(
+            consultation=consultation,
+            status=ordonnance_data.get("status", "non_valide")
+        )
 
-            # 3. Associer les médicaments à l'ordonnance
-            medicaments_data = ordonnance_data.get("medicaments", [])
-            for medicament_data in medicaments_data:
-                medicament = Medicament.objects.filter(id_medicament=medicament_data.get("id_medicament")).first()
-                if not medicament:
-                    return Response(
-                        {"detail": f"Médicament avec ID {medicament_data.get('id_medicament')} non trouvé."},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-
-                OrdonnanceHasMedicament.objects.create(
-                    ordonnance=ordonnance,
-                    medicament=medicament,
-                    dose=medicament_data.get("dose"),
-                    duree=medicament_data.get("duree"),
-                    frequence=medicament_data.get("frequence")
+        # 3. Associer les médicaments à l'ordonnance
+        medicaments_data = ordonnance_data.get("medicaments", [])
+        for medicament_data in medicaments_data:
+            medicament = Medicament.objects.filter(id_medicament=medicament_data.get("id_medicament")).first()
+            if not medicament:
+                return Response(
+                    {"detail": f"Médicament avec ID {medicament_data.get('id_medicament')} non trouvé."},
+                    status=status.HTTP_404_NOT_FOUND
                 )
+
+            OrdonnanceHasMedicament.objects.create(
+                ordonnance=ordonnance,
+                medicament=medicament,
+                dose=medicament_data.get("dose"),
+                duree=medicament_data.get("duree"),
+                frequence=medicament_data.get("frequence")
+            )
 
         return Response(consultation_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -161,7 +158,7 @@ def creerConsultationAvecBilan(request):
     try:
         # 1. Créer la consultation
         consultation_data = {
-            "date": data.get("date"),
+            "date": datetime.now().strftime('%Y-%m-%d'),
             "resume": data.get("resume"),
             "dpi": data.get("dpi"),
             "medecin": medecin_id

@@ -7,7 +7,7 @@ urlpatterns = [
     path('creer/', views.create_consultation, name='create_consultation'),         # Créer une consultation
     path('<int:id_consultation>/modifier/', views.update_consultation, name='update_consultation'), # Mise à jour
     path('<int:id_consultation>/supprimer/', views.delete_consultation, name='delete_consultation'), # Suppression
-    path('creerConsultationAvecOrdonnace/', views.creerConsultationAvecOrdonnace, name='creerConsultationAvecOrdonnace'),
+    path('creerConsultationAvecOrdonnance/', views.creerConsultationAvecOrdonnance, name='creerConsultationAvecOrdonnace'),
     path('creerConsultationAvecBilan/', views.creerConsultationAvecBilan, name='creerConsultationAvecBilan')
 
 ]

@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Consultation
-from ordonnance.serializers import OrdonnanceDetailSerializer
-from bilans.serializers import AnalyseBiologiqueDetailSerializer, ImageRadiologiqueDetailSerializer
+
 class ConsultationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Consultation
@@ -9,7 +8,7 @@ class ConsultationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'resume': {'required': False}  # Ce champ n'est plus obligatoire
         }
-
+'''
 class ConsultationDetailSerializer(serializers.ModelSerializer):
     ordonnances = OrdonnanceDetailSerializer(many=True)
     analyses_biologiques = AnalyseBiologiqueDetailSerializer(many=True)
@@ -20,3 +19,4 @@ class ConsultationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Consultation
         fields = ['id_consultation', 'date', 'resume', 'ordonnances','analyses_biologiques', 'images_radiologiques', 'medecin']
+'''
