@@ -6,22 +6,7 @@ class IsMedecin(permissions.BasePermission):
     """
     def has_permission(self, request, view):
 
-        return request.user and request.user.is_authenticated and request.user.role == 'medecin'
-    
-class IsAdministratif(permissions.BasePermission):
-     
-    def has_permission(self, request, view):
-
-        return request.user and request.user.is_authenticated and request.user.role == 'administratif'    
-
-
-class IsPatient(permissions.BasePermission):
-    """
-    Permission personnalisée qui permet d'autoriser uniquement les patients.
-    """
-    def has_permission(self, request, view):
-        # Vérifie si l'utilisateur est authentifié et si son rôle est "patient"
-        return request.user and request.user.role == 'patient'        
+        return request.user and request.user.is_authenticated and request.user.role == 'medecin'            
 
 class IsMedecinOrInfirmier(permissions.BasePermission):
     """
@@ -37,4 +22,15 @@ class IsPatientOrMedecin(permissions.BasePermission):
     """
     def has_permission(self, request, view):
         # Vérifie si l'utilisateur a un rôle "patient" ou "medecin"
-        return request.user.is_authenticated and request.user.role in ['patient', 'medecin']    
+        return request.user.is_authenticated and request.user.role in ['patient', 'medecin']  
+    
+
+class IsAdministratifOrMedecin(permissions.BasePermission):
+    """
+    Permission personnalisée pour autoriser les patients et les médecins.
+    """
+    def has_permission(self, request, view):
+        # Vérifie si l'utilisateur a un rôle "patient" ou "medecin"
+        return request.user.is_authenticated and request.user.role in ['administratif', 'medecin']     
+
+
