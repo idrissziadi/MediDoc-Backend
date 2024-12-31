@@ -29,3 +29,9 @@ class AnalyseBiologiqueSerializer(serializers.ModelSerializer):
             for param, val in zip(parametres, valeurs)
         ]
         return parametres_valeurs
+    
+
+class ImageRadiologiqueUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageRadiologique
+        fields = ['url', 'compte_rendu', 'radiologue', 'statut'] 
