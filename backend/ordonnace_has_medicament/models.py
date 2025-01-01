@@ -19,9 +19,9 @@ class OrdonnanceHasMedicament(models.Model):
     )
 
     # Champs supplémentaires
-    dose = models.FloatField()  # Dose prescrite
-    duree = models.IntegerField()  # Durée en jours
-    frequence = models.IntegerField()  # Fréquence d'administration par jour
+    dose = models.CharField(max_length=10)  # Dose prescrite
+    duree = models.CharField(max_length=15)  # Durée en jours
+    frequence = models.CharField(max_length=15)  # Fréquence d'administration par jour
 
     def __str__(self):
         return (f"Ordonnance {self.ordonnance.id_ordonnance} - Medicament {self.medicament.nom} | "
