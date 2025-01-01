@@ -9,7 +9,7 @@ from ordonnance.models import Ordonnance
 from ordonnace_has_medicament.models import OrdonnanceHasMedicament
 from medicaments.models import Medicament
 from .serializers import ConsultationSerializer
-from .permissions import IsMedecin
+from .permissions import IsMedecin, IsPatientOrMedecin
 
 @api_view(['GET'])
 @permission_classes([IsMedecin])
@@ -192,3 +192,20 @@ def creerConsultationAvecBilan(request):
 
     except Exception as e:
         return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+
+@api_view(['GET'])
+@permission_classes([IsPatientOrMedecin])
+def getConsultationByPatient(request):
+    """
+    Récupérer toutes les consultations d'un patient par son ID.
+    Accessible aux médecins et aux patients.
+    """
+    try:
+        consultations = Consultation.objects.filter(dpi=request.user.id)
+        if not consultations.exists():
+            return Response({'detail': 'Aucune consultation trouvée pour ce patient.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ConsultationSerializer(consultations, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'detail': f'Une erreur s\'est produite: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
