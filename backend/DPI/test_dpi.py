@@ -144,41 +144,93 @@ class TestConsulterDPI:
     """
 
     def test_consulter_dpi_as_patient(self, api_client, patient_user):
-        """
-        Test that a patient (the owner of the DPI) or medecin can consult a DPI.
-        """
-        # Create DPI with the patient_user
-        dpi = DPI.objects.create(
-            nss="111111111",
-            date_naissance="1995-04-12",
-            telephone="0712345678",
-            adresse="Patient Address",
-            mutuelle="MyMutuelle",
-            personne_contact="Jane Doe",
-            sexe="F",
-            patient=patient_user,
-        )
+        @pytest.mark.django_db
+        class TestConsulterDPI:
+            """
+            Test suite for the consulter_dpi view.
+            """
 
-        api_client.force_authenticate(user=patient_user)
+            def test_consulter_dpi_as_patient(self, api_client, patient_user):
+                """
+                Test that a patient (the owner of the DPI) or medecin can consult a DPI.
+                """
+                # Create DPI with the patient_user
+                dpi = DPI.objects.create(
+                    nss="111111111",
+                    date_naissance="1995-04-12",
+                    telephone="0712345678",
+                    adresse="Patient Address",
+                    mutuelle="MyMutuelle",
+                    personne_contact="Jane Doe",
+                    sexe="F",
+                    patient=patient_user,
+                )
 
-        # Suppose your URL pattern is something like path('dpi/<int:nss>/', consulter_dpi, name='consulter_dpi')
-        url = reverse("consulter_dpi", kwargs={"nss": dpi.nss})
-        response = api_client.get(url, format='json')
+                api_client.force_authenticate(user=patient_user)
 
-        assert response.status_code == status.HTTP_200_OK
-        assert response.data["nom"] == patient_user.nom
+                # Suppose your URL pattern is something like path('dpi/<int:nss>/', consulter_dpi, name='consulter_dpi')
+                url = reverse("consulter_dpi", kwargs={"nss": dpi.nss})
+                response = api_client.get(url, format='json')
 
-    def test_consulter_dpi_not_found(self, api_client, patient_user):
-        """
-        Test that consulting a non-existent DPI returns 404.
-        """
-        api_client.force_authenticate(user=patient_user)
-        url = reverse("consulter_dpi", kwargs={"nss": "999999998"})  # Non-existent
-        response = api_client.get(url, format='json')
+                assert response.status_code == status.HTTP_200_OK
+                assert response.data["patient"]["nom"] == patient_user.nom
 
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert "non trouvé" in str(response.data["detail"])
+            def test_consulter_dpi_as_medecin(self, api_client, medecin_user, patient_user):
+                """
+                Test that a medecin can consult a patient's DPI.
+                """
+                # Create DPI with the patient_user
+                dpi = DPI.objects.create(
+                    nss="111111112",
+                    date_naissance="1995-04-12",
+                    telephone="0712345678",
+                    adresse="Patient Address",
+                    mutuelle="MyMutuelle",
+                    personne_contact="Jane Doe",
+                    sexe="F",
+                    patient=patient_user,
+                )
 
+                api_client.force_authenticate(user=medecin_user)
+
+                url = reverse("consulter_dpi", kwargs={"nss": dpi.nss})
+                response = api_client.get(url, format='json')
+
+                assert response.status_code == status.HTTP_200_OK
+                assert response.data["patient"]["nom"] == patient_user.nom
+
+            def test_consulter_dpi_not_found(self, api_client, patient_user):
+                """
+                Test that consulting a non-existent DPI returns 404.
+                """
+                api_client.force_authenticate(user=patient_user)
+                url = reverse("consulter_dpi", kwargs={"nss": "999999998"})  # Non-existent
+                response = api_client.get(url, format='json')
+
+                assert response.status_code == status.HTTP_404_NOT_FOUND
+                assert "non trouvé" in str(response.data["detail"])
+
+            def test_consulter_dpi_unauthorized(self, api_client, patient_user):
+                """
+                Test that an unauthorized user cannot consult a DPI.
+                """
+                # Create DPI with the patient_user
+                dpi = DPI.objects.create(
+                    nss="111111113",
+                    date_naissance="1995-04-12",
+                    telephone="0712345678",
+                    adresse="Patient Address",
+                    mutuelle="MyMutuelle",
+                    personne_contact="Jane Doe",
+                    sexe="F",
+                    patient=patient_user,
+                )
+
+                # Do not authenticate the client
+                url = reverse("consulter_dpi", kwargs={"nss": dpi.nss})
+                response = api_client.get(url, format='json')
+
+                assert response.status_code == status.HTTP_403_FORBIDDEN
 
 @pytest.mark.django_db
 class TestRechercherDpiParNss:
