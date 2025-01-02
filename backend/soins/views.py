@@ -4,13 +4,13 @@ from rest_framework import status
 from .models import Soin
 from DPI.models import DPI
 from .serializers import SoinSerializer
-from .permissions import IsInfirmier
+from .permissions import IsInfirmier ,IsPatientOrMedecinOrInfirmier
 from datetime import datetime
 
 
 
 @api_view(['GET'])
-@permission_classes([IsInfirmier])
+@permission_classes([IsPatientOrMedecinOrInfirmier])
 def get_soins_par_dpi(request, dpi_id):
     """
     Récupérer tous les soins pour un DPI spécifique, en utilisant l'ID du DPI.

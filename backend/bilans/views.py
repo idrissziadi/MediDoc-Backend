@@ -5,8 +5,10 @@ from .models import  ImageRadiologique, AnalyseBiologique
 from DPI.models import DPI
 from .serializers import ImageRadiologiqueSerializer, AnalyseBiologiqueSerializer
 from DPI.permissions import IsPatientOrMedecin
-from .permissions import IsRadiologue
+from .permissions import IsRadiologue, IsLaborantin
 from .serializers import ImageRadiologiqueUpdateSerializer
+from django.shortcuts import get_object_or_404
+from .serializers import AnalyseBiologiqueUpdateSerializer
 
 
 @api_view(['GET'])
@@ -93,3 +95,46 @@ def remplir_image_radiologique(request):
 
     except Exception as e:
         return Response({"detail": f"Une erreur s'est produite : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['PATCH'])
+@permission_classes([IsLaborantin])  # Vérifie si l'utilisateur est authentifié
+def remplir_analyse_biologique(request):
+     
+    data = request.data
+
+    try:
+        # Récupérer l'ID de l'analyse biologique
+        analyse_id = data.get('id_analyse_biologique')
+        if not analyse_id:
+            return Response({"detail": "L'ID de l'analyse biologique est obligatoire."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Vérifier si l'analyse existe
+        analyse = get_object_or_404(AnalyseBiologique, id_analyse_biologique=analyse_id)
+
+        # Récupérer les paramètres et valeurs envoyés
+        parametres = data.get("parametres", [])
+
+        if not parametres:
+            return Response({"detail": "Les paramètres sont obligatoires."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Convertir les paramètres et valeurs en chaînes séparées par '#'
+        parametre_analyse = '#'.join([item['parametre'] for item in parametres])
+        valeur = '#'.join([str(item['valeur']) for item in parametres])
+
+        # Mettre à jour l'analyse biologique
+        serializer = AnalyseBiologiqueUpdateSerializer(analyse, data={
+            "parametre_analyse": parametre_analyse,
+            "valeur": valeur,
+            "laborantin": request.user.id,  # Extraire l'ID du laborantin depuis le token utilisateur
+            "statut": "terminé"  # Changer le statut à "terminé"
+        }, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        return Response({"detail": f"Une erreur s'est produite : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    

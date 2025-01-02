@@ -35,3 +35,9 @@ class ImageRadiologiqueUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageRadiologique
         fields = ['url', 'compte_rendu', 'radiologue', 'statut'] 
+
+
+class AnalyseBiologiqueUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnalyseBiologique
+        fields = ['parametre_analyse', 'valeur', 'laborantin', 'statut']

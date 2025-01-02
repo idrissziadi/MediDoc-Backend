@@ -1,4 +1,5 @@
 
+import datetime
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,9 +9,8 @@ from bilans.models import AnalyseBiologique, ImageRadiologique
 from ordonnance.models import Ordonnance
 from ordonnace_has_medicament.models import OrdonnanceHasMedicament
 from medicaments.models import Medicament
-from .serializers import ConsultationSerializer
-from .permissions import IsMedecin
-from datetime import datetime
+from .serializers import ConsultationSerializer, ConsultationDetailSerializer
+from .permissions import IsMedecin,IsPatientOrMedecin
 
 @api_view(['GET'])
 @permission_classes([IsMedecin])
@@ -189,3 +189,25 @@ def creerConsultationAvecBilan(request):
 
     except Exception as e:
         return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+
+@api_view(['GET'])
+@permission_classes([IsPatientOrMedecin])
+def getConsultationByPatient(request, id_dpi):
+    """
+    Récupérer toutes les consultations d'un patient par son ID.
+    Accessible aux médecins et aux patients.
+    """
+    try:
+        # Retrieve all consultations for the given patient ID (dpi_id)
+        consultations = Consultation.objects.filter(dpi_id=id_dpi)
+        if not consultations.exists():
+            return Response({'detail': 'Aucune consultation trouvée pour ce patient.'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Use ConsultationDetailSerializer if detailed information is required, otherwise ConsultationSerializer
+        
+        # Serialize the data for the response
+        serializer = ConsultationDetailSerializer(consultations, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except Exception as e:
+        return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

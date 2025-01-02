@@ -4,7 +4,7 @@ from rest_framework import status
 from .models import DPI
 from .serializers import DPISerializer
 from .serializers import DPIDetailSerializer
-from .permissions import IsMedecin , IsMedecinOrInfirmier, IsPatientOrMedecin, IsAdministratifOrMedecin
+from .permissions import IsMedecin , IsMedecinOrInfirmier, IsAdministratifOrMedecin, IsPatientOrMedecin, IsPatient
 from django.contrib.auth import get_user_model
 from accounts.serializers import UserSerializer
 
@@ -121,3 +121,18 @@ def supprimer_dpi(request, dpi_id):
     # Supprimer le DPI
     dpi.delete()
     return Response({'detail': 'DPI supprimé avec succès.'}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+@permission_classes([IsPatient])
+def consulter_dpi_patient(request):
+    # get the patient dpi with the token 
+    try:
+        dpi = DPI.objects.all().select_related('patient').get(patient_id=request.user.id)
+    except DPI.DoesNotExist:
+        return Response({'detail': 'DPI non trouvé pour cet utilisateur.'}, status=status.HTTP_404_NOT_FOUND)
+    # Sérialisation et renvoi des données détaillées du DPI
+    serializer = DPIDetailSerializer(dpi)
+    nom = dpi.patient.nom
+    response_data = serializer.data
+    response_data['nom'] = nom
+    return Response(response_data, status=status.HTTP_200_OK)
