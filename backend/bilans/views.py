@@ -3,11 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import  ImageRadiologique, AnalyseBiologique
 from DPI.models import DPI
-from .serializers import ImageRadiologiqueSerializer, AnalyseBiologiqueSerializer
-from DPI.permissions import IsPatientOrMedecin
+from .serializers import ImageRadiologiqueSerializer, AnalyseBiologiqueSerializer,CustomImageRadiologiqueSerializer
+from DPI.permissions import IsPatientOrMedecinOrInfirmierOrRadiologue
 
 @api_view(['GET'])
-@permission_classes([IsPatientOrMedecin])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def get_images_radiologiques(request):
     nss = request.query_params.get('nss')
     date = request.query_params.get('date')
@@ -33,7 +33,7 @@ def get_images_radiologiques(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsPatientOrMedecin])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def get_analyses_biologiques(request):
     nss = request.query_params.get('nss')
     date = request.query_params.get('date')
@@ -54,5 +54,20 @@ def get_analyses_biologiques(request):
         analyses = analyses.filter(consultation__date__gt=date)
 
     # Sérialiser les données
+    serializer = AnalyseBiologiqueSerializer(analyses, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
+def getRadiologueImages(request):
+    user_id = request.user.id
+    images = ImageRadiologique.objects.filter(radiologue_id=user_id)
+    serializer = CustomImageRadiologiqueSerializer(images, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
+def getAllAnalysesBiologiques(request):
+    analyses = AnalyseBiologique.objects.all()
     serializer = AnalyseBiologiqueSerializer(analyses, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

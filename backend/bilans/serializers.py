@@ -29,3 +29,12 @@ class AnalyseBiologiqueSerializer(serializers.ModelSerializer):
             for param, val in zip(parametres, valeurs)
         ]
         return parametres_valeurs
+
+
+# Custom Serializer for ImageRadiologique
+class CustomImageRadiologiqueSerializer(serializers.ModelSerializer):
+    nss = serializers.CharField(source='consultation.dpi_id', read_only=True)
+    date = serializers.DateField(source='consultation.date', read_only=True)
+    class Meta:
+        model = ImageRadiologique
+        fields = ['id_image_radiologique', 'type', 'url', 'compte_rendu', 'radiologue_id', 'statut', 'nss', 'date']
