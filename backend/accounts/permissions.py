@@ -17,3 +17,11 @@ class IsAdministratif(permissions.BasePermission):
         if role == 'administratif':
             return True   
         return False
+    
+class IsMedecinOrAdministratif(permissions.BasePermission):
+    """
+    Permission personnalisée qui permet d'autoriser uniquement les médecins et les administratifs.
+    """
+    def has_permission(self, request, view):
+        # Vérifie si l'utilisateur est authentifié et si son rôle est "doctor"
+        return request.user and (request.user.role == 'medecin' or request.user.role == 'administratif')

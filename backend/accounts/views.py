@@ -6,7 +6,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
 from .models import User
 from rest_framework.permissions import AllowAny
-from .permissions import IsMedecin, IsAdministratif
+from .permissions import IsMedecin, IsMedecinOrAdministratif
 
 
 @api_view(['POST'])
@@ -76,7 +76,7 @@ def get_user(request, user_id):
     
 
 @api_view(['GET'])
-@permission_classes([IsAdministratif])   
+@permission_classes([IsMedecinOrAdministratif]) 
 def get_medecins(request):
     
     medecins = User.objects.filter(role='medecin').values('id', 'nom', 'specialite')

@@ -161,7 +161,6 @@ AUTH_USER_MODEL = 'accounts.User'
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=3652),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=3652),  
-
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
