@@ -96,7 +96,8 @@ def delete_consultation(request, id_consultation):
 @api_view(['POST'])
 @permission_classes([IsMedecin])
 def creerConsultationAvecOrdonnance(request):
-    medecin_id = request.user.id
+    
+    medecin_id = request.user.id  # Récupérer l'ID du médecin à partir du token
     data = request.data.copy()
 
     try:
@@ -113,31 +114,30 @@ def creerConsultationAvecOrdonnance(request):
 
         consultation = consultation_serializer.save()
 
-        # 2. Créer les ordonnances
-        ordonnances_data = data.get("ordonnances", [])
-        for ordonnance_data in ordonnances_data:
-            ordonnance = Ordonnance.objects.create(
-                consultation=consultation,
-                status=ordonnance_data.get("status", "non_valide")
-            )
+        # 2. Créer l'ordonnance (une seule ordonnance ici)
+        ordonnance_data = data.get("ordonnance", {})  # Notez qu'il s'agit désormais d'un dictionnaire, pas d'une liste
+        ordonnance = Ordonnance.objects.create(
+            consultation=consultation,
+            status=ordonnance_data.get("status", "non_valide")
+        )
 
-            # 3. Associer les médicaments à l'ordonnance
-            medicaments_data = ordonnance_data.get("medicaments", [])
-            for medicament_data in medicaments_data:
-                medicament = Medicament.objects.filter(id_medicament=medicament_data.get("id_medicament")).first()
-                if not medicament:
-                    return Response(
-                        {"detail": f"Médicament avec ID {medicament_data.get('id_medicament')} non trouvé."},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
-
-                OrdonnanceHasMedicament.objects.create(
-                    ordonnance=ordonnance,
-                    medicament=medicament,
-                    dose=medicament_data.get("dose"),
-                    duree=medicament_data.get("duree"),
-                    frequence=medicament_data.get("frequence")
+        # 3. Associer les médicaments à l'ordonnance
+        medicaments_data = ordonnance_data.get("medicaments", [])
+        for medicament_data in medicaments_data:
+            medicament = Medicament.objects.filter(id_medicament=medicament_data.get("id_medicament")).first()
+            if not medicament:
+                return Response(
+                    {"detail": f"Médicament avec ID {medicament_data.get('id_medicament')} non trouvé."},
+                    status=status.HTTP_404_NOT_FOUND
                 )
+
+            OrdonnanceHasMedicament.objects.create(
+                ordonnance=ordonnance,
+                medicament=medicament,
+                dose=medicament_data.get("dose"),
+                duree=medicament_data.get("duree"),
+                frequence=medicament_data.get("frequence")
+            )
 
         return Response(consultation_serializer.data, status=status.HTTP_201_CREATED)
 

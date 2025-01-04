@@ -244,7 +244,7 @@ class TestCreerConsultationAvecOrdonnace:
         self, api_client, medecin_user, dpi_instance
     ):
         """
-        A medecin user can create a consultation and associated ordonnances + meds.
+        A medecin user can create a consultation and associated ordonnance + meds.
         """
         api_client.force_authenticate(user=medecin_user)
         url = reverse("creerConsultationAvecOrdonnace")  # from urls.py
@@ -253,19 +253,17 @@ class TestCreerConsultationAvecOrdonnace:
             "date": "2024-06-10",
             "resume": "Consultation with an ordonnance",
             "dpi": dpi_instance.nss,
-            "ordonnances": [
-                {
-                    "status": "non_valide",
-                    "medicaments": [
-                        {
-                            "id_medicament": 1,  # ID of an existing Medicament
-                            "dose": "500mg",
-                            "duree": "5 days",
-                            "frequence": "3 times a day",
-                        }
-                    ],
-                }
-            ],
+            "ordonnance": {  # Changed from "ordonnances" to "ordonnance"
+                "status": "non_valide",
+                "medicaments": [
+                    {
+                        "id_medicament": 1,  # ID of an existing Medicament
+                        "dose": "500mg",
+                        "duree": "5 days",
+                        "frequence": "3 times a day",
+                    }
+                ]
+            }
         }
 
         # Assuming you have a Medicament with id=1 in your DB. 
