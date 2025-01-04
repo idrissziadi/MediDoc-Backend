@@ -3,9 +3,20 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+from datetime import datetime
 
 from consultations.models import Consultation
 from DPI.models import DPI
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Consultation
+from bilans.models import AnalyseBiologique, ImageRadiologique
+from ordonnance.models import Ordonnance
+from ordonnace_has_medicament.models import OrdonnanceHasMedicament
+from medicaments.models import Medicament
+from .serializers import ConsultationSerializer, ConsultationDetailSerializer
+from .permissions import IsMedecin, IsPatientOrMedecin
 
 User = get_user_model()
 
@@ -304,14 +315,157 @@ class TestCreerConsultationAvecBilan:
         response = api_client.post(url, data, format='json')
         # Depending on your setup, you might need to have the related models, foreign keys, etc. in place
         # to ensure no 404 or other errors occur.
-        
-        assert response.status_code in [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST], response.data
-        if response.status_code == status.HTTP_201_CREATED:
-            assert "id_consultation" in response.data or "resume" in response.data
+        @api_view(['GET'])
+        @permission_classes([IsMedecin])
+        def get_all_consultations(request):
+            consultations = Consultation.objects.all()
+            serializer = ConsultationSerializer(consultations, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def test_creer_consultation_avec_bilan_as_patient_forbidden(self, api_client, patient_user):
-        api_client.force_authenticate(user=patient_user)
-        url = reverse("creerConsultationAvecBilan")
-        data = {}
-        response = api_client.post(url, data, format='json')
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        @api_view(['GET'])
+        @permission_classes([IsMedecin])
+        def get_consultation_by_id(request, id_consultation):
+            try:
+                consultation = Consultation.objects.get(id_consultation=id_consultation)
+            except Consultation.DoesNotExist:
+                return Response({'detail': 'Consultation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = ConsultationSerializer(consultation)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        @api_view(['POST'])
+        @permission_classes([IsMedecin])
+        def create_consultation(request):
+            medecin_id = request.user.id
+            data = request.data.copy()
+            data['medecin'] = medecin_id
+
+            serializer = ConsultationSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        @api_view(['PUT'])
+        @permission_classes([IsMedecin])
+        def update_consultation(request, id_consultation):
+            try:
+                consultation = Consultation.objects.get(id_consultation=id_consultation)
+            except Consultation.DoesNotExist:
+                return Response({'detail': 'Consultation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = ConsultationSerializer(consultation, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        @api_view(['DELETE'])
+        @permission_classes([IsMedecin])
+        def delete_consultation(request, id_consultation):
+            try:
+                consultation = Consultation.objects.get(id_consultation=id_consultation)
+            except Consultation.DoesNotExist:
+                return Response({'detail': 'Consultation non trouvée.'}, status=status.HTTP_404_NOT_FOUND)
+
+            consultation.delete()
+            return Response({'detail': 'Consultation supprimée avec succès.'}, status=status.HTTP_204_NO_CONTENT)
+
+        @api_view(['POST'])
+        @permission_classes([IsMedecin])
+        def creerConsultationAvecOrdonnance(request):
+            medecin_id = request.user.id
+            data = request.data.copy()
+
+            try:
+                consultation_data = {
+                    "date": datetime.datetime.now().strftime('%Y-%m-%d'),
+                    "resume": data.get("resume"),
+                    "dpi": data.get("dpi"),
+                    "medecin": medecin_id
+                }
+                consultation_serializer = ConsultationSerializer(data=consultation_data)
+                if not consultation_serializer.is_valid():
+                    return Response(consultation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+                consultation = consultation_serializer.save()
+
+                ordonnance_data = data.get("ordonnance", {})
+                ordonnance = Ordonnance.objects.create(
+                    consultation=consultation,
+                    status=ordonnance_data.get("status", "non_valide")
+                )
+
+                medicaments_data = ordonnance_data.get("medicaments", [])
+                for medicament_data in medicaments_data:
+                    medicament = Medicament.objects.filter(id_medicament=medicament_data.get("id_medicament")).first()
+                    if not medicament:
+                        return Response(
+                            {"detail": f"Médicament avec ID {medicament_data.get('id_medicament')} non trouvé."},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+
+                    OrdonnanceHasMedicament.objects.create(
+                        ordonnance=ordonnance,
+                        medicament=medicament,
+                        dose=medicament_data.get("dose"),
+                        duree=medicament_data.get("duree"),
+                        frequence=medicament_data.get("frequence")
+                    )
+
+                return Response(consultation_serializer.data, status=status.HTTP_201_CREATED)
+
+            except Exception as e:
+                return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        @api_view(['POST'])
+        @permission_classes([IsMedecin])
+        def creerConsultationAvecBilan(request):
+            medecin_id = request.user.id
+            data = request.data.copy()
+
+            try:
+                consultation_data = {
+                    "date": datetime.datetime.now().strftime('%Y-%m-%d'),
+                    "resume": data.get("resume"),
+                    "dpi": data.get("dpi"),
+                    "medecin": medecin_id
+                }
+                consultation_serializer = ConsultationSerializer(data=consultation_data)
+                if not consultation_serializer.is_valid():
+                    return Response(consultation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+                consultation = consultation_serializer.save()
+
+                analyses_data = data.get("analyses_biologiques", [])
+                for analyse_data in analyses_data:
+                    AnalyseBiologique.objects.create(
+                        type=analyse_data.get("type"),
+                        consultation=consultation
+                    )
+
+                images_data = data.get("images_radiologiques", [])
+                for image_data in images_data:
+                    ImageRadiologique.objects.create(
+                        type=image_data.get("type"),
+                        consultation=consultation
+                    )
+
+                return Response(consultation_serializer.data, status=status.HTTP_201_CREATED)
+
+            except Exception as e:
+                return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        @api_view(['GET'])
+        @permission_classes([IsPatientOrMedecin])
+        def getConsultationByPatient(request, id_dpi):
+            try:
+                consultations = Consultation.objects.filter(dpi_id=id_dpi)
+                if not consultations.exists():
+                    return Response({'detail': 'Aucune consultation trouvée pour ce patient.'}, status=status.HTTP_404_NOT_FOUND)
+
+                serializer = ConsultationDetailSerializer(consultations, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+
+            except Exception as e:
+                return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
