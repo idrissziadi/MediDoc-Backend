@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     'consultations',
     'ordonnance',
     'medicaments',
-    'ordonnace_has_medicament', 
     'corsheaders',
 ]
 

@@ -12,7 +12,6 @@ class Ordonnance(models.Model):
     ]
 
     id_ordonnance = models.AutoField(primary_key=True)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='non_valide')
 
     # Relation avec Consultation (une consultation peut avoir plusieurs ordonnances)
     consultation = models.OneToOneField(
@@ -22,4 +21,4 @@ class Ordonnance(models.Model):
     )
 
     def __str__(self):
-        return f"Ordonnance {self.id_ordonnance} - {self.status} (Consultation ID: {self.consultation.id_consultation})"
+        return f"Ordonnance {self.id_ordonnance} (Consultation ID: {self.consultation.id_consultation})"
