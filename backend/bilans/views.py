@@ -68,7 +68,7 @@ def get_analyses_biologiques(request):
 @permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def getRadiologueImages(request):
     user_id = request.user.id
-    images = ImageRadiologique.objects.filter(radiologue_id=user_id)
+    images = ImageRadiologique.objects.all()
     serializer = CustomImageRadiologiqueSerializer(images, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -76,7 +76,7 @@ def getRadiologueImages(request):
 @permission_classes([IsLaborantin])
 def getAllAnalysesBiologiques(request):
     user_id = request.user.id
-    analyses = AnalyseBiologique.objects.filter(laborantin_id=user_id)
+    analyses = AnalyseBiologique.objects.all()
     serializer = AnalyseBiologiqueSerializer(analyses, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
