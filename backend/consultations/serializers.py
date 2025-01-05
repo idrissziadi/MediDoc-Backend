@@ -21,6 +21,8 @@ class ConsultationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'resume': {'required': False}  # Ce champ n'est plus obligatoire
         }
+
+
 class ConsultationDetailSerializer(serializers.ModelSerializer):
     medecin = serializers.CharField(source='medecin.nom', read_only=True)
     dpi = serializers.CharField(source='dpi.nss', read_only=True)

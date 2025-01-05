@@ -8,4 +8,4 @@ class MedicamentSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Medicament
-        fields = ['id_medicament', 'nom', 'code', 'forme']
+        fields = [ 'nom', 'dose', 'duree']
