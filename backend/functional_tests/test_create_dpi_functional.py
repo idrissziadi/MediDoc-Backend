@@ -65,7 +65,7 @@ class TestCreateDPI(StaticLiveServerTestCase):
         email_field = wait.until(EC.presence_of_element_located(email_field_locator))
         password_field = wait.until(EC.presence_of_element_located(password_field_locator))
 
-        email_field.send_keys("mz_soualahmohammed@esi.dz")
+        email_field.send_keys("selenium@selenium.com")
         password_field.send_keys("password123")
 
         login_button = wait.until(EC.element_to_be_clickable(login_button_locator))
