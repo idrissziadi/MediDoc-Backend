@@ -13,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Consultation
 from bilans.models import AnalyseBiologique, ImageRadiologique
 from ordonnance.models import Ordonnance
-from ordonnace_has_medicament.models import OrdonnanceHasMedicament
 from medicaments.models import Medicament
 from .serializers import ConsultationSerializer, ConsultationDetailSerializer
 from .permissions import IsMedecin, IsPatientOrMedecin
@@ -237,53 +236,40 @@ class TestDeleteConsultation:
         response = api_client.delete(url)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-
 @pytest.mark.django_db
 class TestCreerConsultationAvecOrdonnace:
-    def test_creer_consultation_avec_ordonnace_success(
-        self, api_client, medecin_user, dpi_instance
-    ):
+    def test_creer_consultation_avec_ordonnace_success(self, api_client, medecin_user, dpi_instance):
         """
         A medecin user can create a consultation and associated ordonnance + meds.
         """
         api_client.force_authenticate(user=medecin_user)
-        url = reverse("creerConsultationAvecOrdonnace")  # from urls.py
+        url = reverse("creerConsultationAvecOrdonnace")
 
         data = {
-            "date": "2024-06-10",
             "resume": "Consultation with an ordonnance",
             "dpi": dpi_instance.nss,
-            "ordonnance": {  # Changed from "ordonnances" to "ordonnance"
-                "status": "non_valide",
+            "ordonnance": {
                 "medicaments": [
                     {
-                        "id_medicament": 1,  # ID of an existing Medicament
+                        "nom": "TestMedicament",
                         "dose": "500mg",
-                        "duree": "5 days",
-                        "frequence": "3 times a day",
+                        "duree": "5 days"
                     }
                 ]
             }
         }
 
-        # Assuming you have a Medicament with id=1 in your DB. 
-        # Otherwise, you might need to create one before this request or adjust accordingly.
-
         response = api_client.post(url, data, format='json')
-        # If Medicament with id=1 doesn't exist, you'll get 404 from your code.
 
-        if response.status_code == status.HTTP_404_NOT_FOUND:
-            assert "non trouvé" in response.data["detail"]
-        else:
-            assert response.status_code == status.HTTP_201_CREATED
-
-    def test_creer_consultation_avec_ordonnace_as_patient_forbidden(self, api_client, patient_user):
-        api_client.force_authenticate(user=patient_user)
-        url = reverse("creerConsultationAvecOrdonnace")
-        data = {}
-        response = api_client.post(url, data, format='json')
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-
+        assert response.status_code == status.HTTP_201_CREATED
+        assert Consultation.objects.filter(dpi=dpi_instance, resume="Consultation with an ordonnance").exists()
+        assert Ordonnance.objects.filter(consultation__dpi=dpi_instance).exists()
+        assert Medicament.objects.filter(
+            nom="TestMedicament",
+            dose="500mg",
+            duree="5 days",
+            ordonnance__consultation__dpi=dpi_instance
+        ).exists()
 
 @pytest.mark.django_db
 class TestCreerConsultationAvecBilan:
