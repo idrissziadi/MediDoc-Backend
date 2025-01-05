@@ -50,3 +50,11 @@ class IsAdministratif(permissions.BasePermission):
         def has_permission(self, request, view):
                 # Vérifie si l'utilisateur a un rôle "patient" ou "medecin"
                 return request.user.is_authenticated and request.user.role in ['administratif']
+            
+class IsPatientOrMedecinOrInfirmierOrRadiologue(permissions.BasePermission):
+    """
+    Permission personnalisée pour autoriser les patients et les médecins.
+    """
+    def has_permission(self, request, view):
+        # Vérifie si l'utilisateur a un rôle "patient" ou "medecin"
+        return request.user.is_authenticated and request.user.role in ['patient', 'medecin', 'infirmier', 'radiologue']            

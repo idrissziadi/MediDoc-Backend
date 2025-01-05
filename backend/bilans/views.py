@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import  ImageRadiologique, AnalyseBiologique
 from DPI.models import DPI
+from .serializers import ImageRadiologiqueSerializer, AnalyseBiologiqueSerializer,CustomImageRadiologiqueSerializer
+from DPI.permissions import IsPatientOrMedecinOrInfirmierOrRadiologue
 from .serializers import ImageRadiologiqueSerializer, AnalyseBiologiqueSerializer
 from DPI.permissions import IsPatientOrMedecin
 from .permissions import IsRadiologue, IsLaborantin
@@ -12,7 +14,7 @@ from .serializers import AnalyseBiologiqueUpdateSerializer
 
 
 @api_view(['GET'])
-@permission_classes([IsPatientOrMedecin])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def get_images_radiologiques(request):
     nss = request.query_params.get('nss')
     date = request.query_params.get('date')
@@ -38,7 +40,7 @@ def get_images_radiologiques(request):
 
 
 @api_view(['GET'])
-@permission_classes([IsPatientOrMedecin])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def get_analyses_biologiques(request):
     nss = request.query_params.get('nss')
     date = request.query_params.get('date')
@@ -62,8 +64,25 @@ def get_analyses_biologiques(request):
     serializer = AnalyseBiologiqueSerializer(analyses, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
+def getRadiologueImages(request):
+    user_id = request.user.id
+    images = ImageRadiologique.objects.filter(radiologue_id=user_id)
+    serializer = CustomImageRadiologiqueSerializer(images, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
-@api_view(['PATCH'])
+@api_view(['GET'])
+@permission_classes([IsLaborantin])
+def getAllAnalysesBiologiques(request):
+    user_id = request.user.id
+    analyses = AnalyseBiologique.objects.filter(laborantin_id=user_id)
+    serializer = AnalyseBiologiqueSerializer(analyses, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@api_view(['PUT'])
 @permission_classes([IsRadiologue])
 def remplir_image_radiologique(request):
     """
@@ -97,7 +116,7 @@ def remplir_image_radiologique(request):
         return Response({"detail": f"Une erreur s'est produite : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
-@api_view(['PATCH'])
+@api_view(['PUT'])
 @permission_classes([IsLaborantin])  # Vérifie si l'utilisateur est authentifié
 def remplir_analyse_biologique(request):
      
