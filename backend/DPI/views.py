@@ -7,8 +7,19 @@ from .serializers import DPIDetailSerializer
 from .permissions import IsMedecin , IsMedecinOrInfirmier, IsAdministratifOrMedecin, IsPatientOrMedecin, IsPatient
 from django.contrib.auth import get_user_model
 from accounts.serializers import UserSerializer
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
-
+@swagger_auto_schema(
+    method='post',
+    operation_description="Créer un DPI pour un patient. Accessible uniquement aux administratifs et médecins.",
+    request_body=DPISerializer,
+    responses={
+        201: "DPI créé avec succès.",
+        400: "Erreur lors de la création du DPI ou si le numéro de sécurité sociale existe déjà.",
+        404: "Médecin spécifié introuvable.",
+    }
+)
 @api_view(['POST'])
 @permission_classes([IsAdministratifOrMedecin])
 def creer_dpi(request):
@@ -55,7 +66,17 @@ def creer_dpi(request):
             return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+@swagger_auto_schema(
+    method='get',
+    operation_description="Récupérer les informations détaillées d'un DPI en utilisant le NSS. Accessible aux patients et médecins.",
+    manual_parameters=[
+        openapi.Parameter('nss', openapi.IN_PATH, description="Numéro de Sécurité Sociale du patient", type=openapi.TYPE_STRING, required=True)
+    ],
+    responses={
+        200: DPIDetailSerializer,
+        404: "DPI non trouvé pour cet utilisateur."
+    }
+)
 @api_view(['GET'])
 @permission_classes([IsPatientOrMedecin])
 def consulter_dpi(request, nss):
@@ -70,7 +91,17 @@ def consulter_dpi(request, nss):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
+@swagger_auto_schema(
+    method='get',
+    operation_description="Rechercher un DPI par le NSS. Accessible uniquement aux médecins et infirmiers.",
+    manual_parameters=[
+        openapi.Parameter('nss', openapi.IN_PATH, description="Numéro de Sécurité Sociale du patient", type=openapi.TYPE_STRING, required=True)
+    ],
+    responses={
+        200: "Nom du patient",
+        404: "DPI non trouvé avec ce NSS."
+    }
+)
 @api_view(['GET'])
 @permission_classes([IsMedecinOrInfirmier])
 def rechercher_dpi_par_nss(request, nss):
@@ -83,6 +114,16 @@ def rechercher_dpi_par_nss(request, nss):
     return Response({'nom': patient_nom}, status=status.HTTP_200_OK)
 
 
+@swagger_auto_schema(
+    method='patch',
+    operation_description="Modifier un DPI existant avec l'ID spécifié. Accessible uniquement aux médecins.",
+    request_body=DPISerializer,
+    responses={
+        200: DPISerializer,
+        404: "DPI non trouvé.",
+        400: "Erreur de validation des données."
+    }
+)
 @api_view(['PATCH'])
 @permission_classes([IsMedecin])
 def modifier_dpi(request, dpi_id):
@@ -105,6 +146,17 @@ def modifier_dpi(request, dpi_id):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@swagger_auto_schema(
+    method='delete',
+    operation_description="Supprimer un DPI existant avec l'ID spécifié. Accessible uniquement aux médecins.",
+    manual_parameters=[
+        openapi.Parameter('dpi_id', openapi.IN_PATH, description="ID du DPI à supprimer", type=openapi.TYPE_STRING, required=True)
+    ],
+    responses={
+        204: "DPI supprimé avec succès.",
+        404: "DPI non trouvé."
+    }
+)
 @api_view(['DELETE'])
 @permission_classes([IsMedecin])
 def supprimer_dpi(request, dpi_id):
@@ -122,6 +174,15 @@ def supprimer_dpi(request, dpi_id):
     dpi.delete()
     return Response({'detail': 'DPI supprimé avec succès.'}, status=status.HTTP_204_NO_CONTENT)
 
+
+@swagger_auto_schema(
+    method='get',
+    operation_description="Récupérer les informations détaillées du DPI d'un patient connecté via le token. Accessible uniquement aux patients.",
+    responses={
+        200: DPIDetailSerializer,
+        404: "DPI non trouvé pour cet utilisateur."
+    }
+)
 @api_view(['GET'])
 @permission_classes([IsPatient])
 def consulter_dpi_patient(request):

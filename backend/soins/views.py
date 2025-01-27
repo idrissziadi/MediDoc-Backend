@@ -6,9 +6,21 @@ from DPI.models import DPI
 from .serializers import SoinSerializer
 from .permissions import IsInfirmier ,IsPatientOrMedecinOrInfirmier
 from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
-
+@swagger_auto_schema(
+    method='get',
+    operation_description="Récupérer tous les soins pour un DPI spécifique en utilisant son ID. Accessible uniquement aux infirmiers.",
+    manual_parameters=[
+        openapi.Parameter('dpi_id', openapi.IN_PATH, description="ID du DPI (Numéro de Sécurité Sociale)", type=openapi.TYPE_STRING, required=True)
+    ],
+    responses={
+        200: SoinSerializer,
+        404: "DPI spécifié introuvable."
+    }
+)
 @api_view(['GET'])
 @permission_classes([IsPatientOrMedecinOrInfirmier])
 def get_soins_par_dpi(request, dpi_id):
@@ -26,7 +38,16 @@ def get_soins_par_dpi(request, dpi_id):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
+@swagger_auto_schema(
+    method='post',
+    operation_description="Ajouter un soin pour un DPI. Accessible uniquement aux infirmiers.",
+    request_body=SoinSerializer,
+    responses={
+        201: SoinSerializer,
+        400: "DPI spécifié introuvable.",
+        400: "Erreur de validation des données."
+    }
+)
 @api_view(['POST'])
 @permission_classes([IsInfirmier])
 def ajouterSoins(request):

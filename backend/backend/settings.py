@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-'''
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -96,14 +96,10 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),       # Mot de passe MySQL
         'HOST': config('DB_HOST'),                  # Adresse de l'hôte (localhost)
         'PORT': config('DB_PORT'),                       # Port MySQL par défaut
-        'OPTIONS': {
-            'ssl': {
-                'ca': path.join(BASE_DIR, 'DigiCertGlobalRootCA.crt.pem') 
-            }
-        }
+         
     }
 }
-'''
+
 
 
 # Password validation
