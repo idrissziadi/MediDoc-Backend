@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'ordonnance',
     'medicaments',
     'corsheaders',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -95,11 +96,7 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),       # Mot de passe MySQL
         'HOST': config('DB_HOST'),                  # Adresse de l'hôte (localhost)
         'PORT': config('DB_PORT'),                       # Port MySQL par défaut
-        'OPTIONS': {
-            'ssl': {
-                'ca': path.join(BASE_DIR, 'DigiCertGlobalRootCA.crt.pem') 
-            }
-        }
+         
     }
 }
 

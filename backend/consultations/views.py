@@ -9,7 +9,13 @@ from medicaments.models import Medicament
 from .serializers import ConsultationSerializer, ConsultationDetailSerializer
 from .permissions import IsMedecin,IsPatientOrMedecin
 from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
+@swagger_auto_schema(
+    method='get',
+    responses={200: ConsultationSerializer, 404: "Consultation non trouvée"}
+)
 @api_view(['GET'])
 @permission_classes([IsMedecin])
 def get_all_consultations(request):
@@ -21,6 +27,11 @@ def get_all_consultations(request):
     serializer = ConsultationSerializer(consultations, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+@swagger_auto_schema(
+    method='get',
+    responses={200: ConsultationSerializer, 404: "Consultation non trouvée"}
+)
 @api_view(['GET'])
 @permission_classes([IsMedecin])
 def get_consultation_by_id(request, id_consultation):
@@ -36,6 +47,11 @@ def get_consultation_by_id(request, id_consultation):
     serializer = ConsultationSerializer(consultation)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='post',
+    request_body=ConsultationSerializer,
+    responses={201: ConsultationSerializer, 400: "Données invalides"}
+)
 @api_view(['POST'])
 @permission_classes([IsMedecin])
 def create_consultation(request):
@@ -55,6 +71,11 @@ def create_consultation(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    method='put',
+    request_body=ConsultationSerializer,
+    responses={200: ConsultationSerializer, 404: "Consultation non trouvée", 400: "Données invalides"}
+)
 @api_view(['PUT'])
 @permission_classes([IsMedecin])
 def update_consultation(request, id_consultation):
@@ -73,6 +94,10 @@ def update_consultation(request, id_consultation):
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@swagger_auto_schema(
+    method='delete',
+    responses={204: "Consultation supprimée avec succès", 404: "Consultation non trouvée"}
+)
 @api_view(['DELETE'])
 @permission_classes([IsMedecin])
 def delete_consultation(request, id_consultation):
@@ -90,7 +115,19 @@ def delete_consultation(request, id_consultation):
 
 
 
-
+@swagger_auto_schema(
+    method='post',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['resume', 'dpi', 'ordonnance'],
+        properties={
+            'resume': openapi.Schema(type=openapi.TYPE_STRING),
+            'dpi': openapi.Schema(type=openapi.TYPE_STRING),
+            'ordonnance': openapi.Schema(type=openapi.TYPE_OBJECT),
+        },
+    ),
+    responses={201: "Consultation créée avec ordonnance", 400: "Données invalides", 500: "Erreur interne"}
+)
 @api_view(['POST'])
 @permission_classes([IsMedecin])
 def creerConsultationAvecOrdonnance(request):
@@ -133,7 +170,10 @@ def creerConsultationAvecOrdonnance(request):
     except Exception as e:
         return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
+@swagger_auto_schema(
+    method='post',
+    responses={201: "Consultation créée avec bilan", 400: "Données invalides", 500: "Erreur interne"}
+)
 @api_view(['POST'])
 @permission_classes([IsMedecin])
 def creerConsultationAvecBilan(request):
@@ -179,6 +219,10 @@ def creerConsultationAvecBilan(request):
     except Exception as e:
         return Response({"detail": f"Une erreur s'est produite: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
 
+@swagger_auto_schema(
+    method='get',
+    responses={204: "Consultations trouve", 404: "Consultations non trouvée pour ce patient"}
+)
 @api_view(['GET'])
 @permission_classes([IsPatientOrMedecin])
 def getConsultationByPatient(request, id_dpi):

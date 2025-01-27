@@ -11,11 +11,23 @@ from .permissions import IsRadiologue, IsLaborantin
 from .serializers import ImageRadiologiqueUpdateSerializer
 from django.shortcuts import get_object_or_404
 from .serializers import AnalyseBiologiqueUpdateSerializer
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
-
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter('nss', openapi.IN_QUERY, description="Numéro de sécurité sociale (NSS) du patient", type=openapi.TYPE_STRING, required=True),
+        openapi.Parameter('date', openapi.IN_QUERY, description="Filtrer les images après cette date (format YYYY-MM-DD)", type=openapi.TYPE_STRING, required=False)
+    ],
+    responses={200: ImageRadiologiqueSerializer(many=True), 400: "Le champ NSS est obligatoire.", 404: "DPI non trouvé"}
+)
 @api_view(['GET'])
 @permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def get_images_radiologiques(request):
+    """
+    Récupère les images radiologiques d'un patient (NSS requis).
+    """
     nss = request.query_params.get('nss')
     date = request.query_params.get('date')
 
@@ -39,9 +51,20 @@ def get_images_radiologiques(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@swagger_auto_schema(
+    method='get',
+    manual_parameters=[
+        openapi.Parameter('nss', openapi.IN_QUERY, description="Numéro de sécurité sociale (NSS) du patient", type=openapi.TYPE_STRING, required=True),
+        openapi.Parameter('date', openapi.IN_QUERY, description="Filtrer les analyses après cette date (format YYYY-MM-DD)", type=openapi.TYPE_STRING, required=False)
+    ],
+    responses={200: AnalyseBiologiqueSerializer(many=True), 400: "Le champ NSS est obligatoire.", 404: "DPI non trouvé"}
+)
 @api_view(['GET'])
 @permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def get_analyses_biologiques(request):
+    """
+    Récupère les analyses biologiques d'un patient (NSS requis).
+    """
     nss = request.query_params.get('nss')
     date = request.query_params.get('date')
 
@@ -64,24 +87,50 @@ def get_analyses_biologiques(request):
     serializer = AnalyseBiologiqueSerializer(analyses, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='get',
+    responses={200: CustomImageRadiologiqueSerializer(many=True)}
+)
 @api_view(['GET'])
 @permission_classes([IsPatientOrMedecinOrInfirmierOrRadiologue])
 def getRadiologueImages(request):
+    """
+    Récupère toutes les images radiologiques disponibles pour un radiologue.
+    """
     user_id = request.user.id
     images = ImageRadiologique.objects.all()
     serializer = CustomImageRadiologiqueSerializer(images, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+@swagger_auto_schema(
+    method='get',
+    responses={200: AnalyseBiologiqueSerializer(many=True)}
+)
 @api_view(['GET'])
 @permission_classes([IsLaborantin])
 def getAllAnalysesBiologiques(request):
+    """
+    Récupère toutes les analyses biologiques disponibles pour un laborantin.
+    """
     user_id = request.user.id
     analyses = AnalyseBiologique.objects.all()
     serializer = AnalyseBiologiqueSerializer(analyses, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
+@swagger_auto_schema(
+    method='put',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['id_image_radiologique', 'url', 'compte_rendu'],
+        properties={
+            'id_image_radiologique': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID de l'image radiologique"),
+            'url': openapi.Schema(type=openapi.TYPE_STRING, description="URL de l'image radiologique"),
+            'compte_rendu': openapi.Schema(type=openapi.TYPE_STRING, description="Compte rendu du radiologue"),
+        },
+    ),
+    responses={200: ImageRadiologiqueUpdateSerializer, 404: "Image radiologique introuvable", 400: "Données invalides"}
+)
 @api_view(['PUT'])
 @permission_classes([IsRadiologue])
 def remplir_image_radiologique(request):
@@ -115,11 +164,30 @@ def remplir_image_radiologique(request):
     except Exception as e:
         return Response({"detail": f"Une erreur s'est produite : {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-
+@swagger_auto_schema(
+    method='put',
+    request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['id_analyse_biologique', 'parametres'],
+        properties={
+            'id_analyse_biologique': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID de l'analyse biologique"),
+            'parametres': openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                items=openapi.Items(type=openapi.TYPE_OBJECT, properties={
+                    'parametre': openapi.Schema(type=openapi.TYPE_STRING, description="Nom du paramètre d'analyse"),
+                    'valeur': openapi.Schema(type=openapi.TYPE_STRING, description="Valeur du paramètre d'analyse")
+                })
+            )
+        },
+    ),
+    responses={200: AnalyseBiologiqueUpdateSerializer, 400: "Données invalides", 404: "Analyse biologique introuvable"}
+)
 @api_view(['PUT'])
 @permission_classes([IsLaborantin])  # Vérifie si l'utilisateur est authentifié
 def remplir_analyse_biologique(request):
-     
+    """
+    Endpoint permettant à un laborantin de compléter les informations d'une analyse biologique.
+    """     
     data = request.data
 
     try:
