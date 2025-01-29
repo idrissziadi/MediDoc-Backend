@@ -8,7 +8,7 @@ class ImageRadiologiqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = ImageRadiologique
         radiologue = serializers.StringRelatedField()
-        fields = ['id_image_radiologique', 'type', 'url', 'compte_rendu', 'statut', 'nss', 'date']
+        fields = ['id_image_radiologique', 'type', 'url', 'compte_rendu', 'statut', 'nss', 'date','consultation_id']
 
 
 class AnalyseBiologiqueSerializer(serializers.ModelSerializer):
@@ -18,7 +18,7 @@ class AnalyseBiologiqueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnalyseBiologique
-        fields = ['id_analyse_biologique', 'type', 'parametres', 'statut', 'nss', 'date']
+        fields = ['id_analyse_biologique', 'type', 'parametres', 'statut', 'nss', 'date','consultation_id']
 
     def get_parametres(self, obj):
         """
@@ -41,7 +41,7 @@ class CustomImageRadiologiqueSerializer(serializers.ModelSerializer):
     date = serializers.DateField(source='consultation.date', read_only=True)
     class Meta:
         model = ImageRadiologique
-        fields = ['id_image_radiologique', 'type', 'url', 'compte_rendu', 'radiologue_id', 'statut', 'nss', 'date']
+        fields = ['id_image_radiologique', 'type', 'url', 'compte_rendu', 'radiologue_id', 'statut', 'nss', 'date','consultation_id']
     
 
 class ImageRadiologiqueUpdateSerializer(serializers.ModelSerializer):

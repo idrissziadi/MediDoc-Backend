@@ -19,4 +19,4 @@ class OrdonnanceDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ordonnance
-        fields = ['id_ordonnance', 'date', 'nom_medecin', 'medicaments']
+        fields = ['id_ordonnance', 'date', 'nom_medecin', 'medicaments','consultation_id']
