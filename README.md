@@ -44,7 +44,7 @@ Ensure you have the following installed:
 ### Installation
 Clone the repository:
 ```bash
-git clone (https://github.com/idrissziadi/MediDoc-Backend)
+git clone https://github.com/idrissziadi/MediDoc-Backend
 cd MediDoc-Backend
 ```
 Create and activate a virtual environment:
@@ -109,4 +109,6 @@ gunicorn --workers 3 --bind 0.0.0.0:8000 medidoc.wsgi:application
 
 ---
 Thank you for using **MediDoc - Digital Patient Record (DPI) Backend**. For any issues or contributions, feel free to open a pull request or an issue.
+
+GitHub Repository: [https://github.com/idrissziadi/MediDoc-Backend](https://github.com/idrissziadi/MediDoc-Backend)
 
