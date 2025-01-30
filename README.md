@@ -61,7 +61,7 @@ Create a `.env` file in the project root and add the following:
 ```env
 DEBUG=True
 SECRET_KEY=your_secret_key
-DATABASE_URL=postgres://user:password@localhost:5432/medidoc_db
+DATABASE_URL=//user:password@localhost:5432/medidoc_db
 ```
 
 ### Database Migrations
